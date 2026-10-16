@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Simulador Solar · Heliodón UMSS</title>
+  <meta name="description" content="Simulador solar del heliodón de la UMSS: inclinación del anillo por país y fecha, fórmulas y explicación del proyecto.">
+  <meta name="theme-color" content="#0d3b7a">
+  <meta name="color-scheme" content="light">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/favicon.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Simulador Solar">
+  <link rel="stylesheet" href="lib/katex/katex.min.css">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+
+<header class="cabecera">
+  <div class="cabecera-in">
+    <div class="marca">
+      <span class="escudo"><img src="img/logo_umss.png" alt="Escudo UMSS"></span>
+      <div>
+        <h1>Simulador Solar</h1>
+        <p>Heliodón · Universidad Mayor de San Simón</p>
+      </div>
+    </div>
+    <div class="acciones">
+      <button id="btn-instalar" class="btn-cab" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M5 21h14" /></svg>
+        <span>Instalar</span>
+      </button>
+      <button id="btn-qr" class="btn-cab" aria-label="Compartir con código QR">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"/></svg>
+        <span>QR</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ============================ SIMULAR ============================ -->
+<section id="pag-simular" class="pagina activa" aria-labelledby="t-simular">
+  <h2 id="t-simular" class="titulo-pag">Ubicaciones</h2>
+  <div class="dos-col">
+    <div class="col">
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra azul"></span>1 · Elija el país</h3>
+        <div class="paises" id="paises" role="radiogroup" aria-label="País"></div>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra azul"></span>2 · Elija la fecha</h3>
+        <div class="fecha">
+          <label>Día
+            <select id="sel-dia" aria-label="Día"></select>
+          </label>
+          <label>Mes
+            <select id="sel-mes" aria-label="Mes"></select>
+          </label>
+        </div>
+        <p class="mini">Fechas clave (solsticios y equinoccios)</p>
+        <div class="chips">
+          <button data-f="21/03">21/03</button>
+          <button data-f="21/06">21/06</button>
+          <button data-f="23/09">23/09</button>
+          <button data-f="21/12">21/12</button>
+          <button data-f="hoy" class="hoy">Hoy</button>
+        </div>
+      </div>
+
+      <div class="tarjeta sin-pad">
+        <canvas id="cv-pais" class="cv-redondo" width="300" height="172" aria-label="Ilustración del país"></canvas>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="tarjeta">
+        <div class="caja-angulo" id="caja-angulo">
+          <span class="l1">Incline el anillo</span>
+          <span class="l2" id="txt-angulo">—</span>
+        </div>
+        <canvas id="cv-helio" width="380" height="330" aria-label="Heliodón con el anillo inclinado"></canvas>
+        <button class="enlace" data-ir="formula">¿Por qué sale este ángulo? Ver la fórmula →</button>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra verde"></span>Resultados</h3>
+        <div class="datos-sol">
+          <dl class="datos" id="datos">
+            <div><dt>País</dt><dd id="d-pais">—</dd></div>
+            <div><dt>Ciudad</dt><dd id="d-ciudad">—</dd></div>
+            <div><dt>Latitud</dt><dd id="d-lat">—</dd></div>
+            <div><dt>Fecha</dt><dd id="d-fecha">—</dd></div>
+            <div><dt>Día n°</dt><dd id="d-n">—</dd></div>
+            <div><dt>Temp.</dt><dd id="d-temp">—</dd></div>
+          </dl>
+          <canvas id="cv-sol" class="cv-redondo" height="160" aria-label="El Sol sobre una casa"></canvas>
+        </div>
+        <canvas id="cv-estacion" class="cv-redondo mt" height="118" aria-label="Estación del año"></canvas>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra sol"></span>Inclinación del anillo por estación</h3>
+        <ul class="tabla-est" id="tabla-est"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ FORMULA ============================ -->
+<section id="pag-formula" class="pagina" aria-labelledby="t-formula">
+  <h2 id="t-formula" class="titulo-pag">La fórmula</h2>
+  <div class="dos-col">
+    <div class="col">
+      <div class="tarjeta destacado">
+        <p class="kicker">Ejemplo con su selección</p>
+        <p class="ejemplo" id="f-ejemplo">—</p>
+        <p class="mini">Cambie el país o la fecha en <b>Ubicaciones</b> y todos los números de esta página se recalculan.</p>
+      </div>
+
+      <div class="tarjeta teoria">
+        <h3 class="t-tarjeta"><span class="barra sol"></span>¿Por qué sale este ángulo? La idea</h3>
+        <div id="f-teoria"></div>
+      </div>
+
+      <div class="tarjeta paso">
+        <span class="num">1</span>
+        <h3>Número del día del año <span class="var">n</span></h3>
+        <p>Contamos los días desde el 1 de enero. Es el mismo conteo que hace el programa.</p>
+        <div class="ecuacion" id="f-n"></div>
+        <p class="mini" id="f-n-txt"></p>
+      </div>
+
+      <div class="tarjeta paso">
+        <span class="num">2</span>
+        <h3>Declinación solar <span class="var">δ</span></h3>
+        <p>Es la latitud donde el Sol cae <b>exactamente vertical</b> al mediodía ese día. Se calcula con la <b>ecuación de Cooper</b>:</p>
+        <div class="ecuacion" id="f-delta-gen"></div>
+        <div class="ecuacion" id="f-delta"></div>
+      </div>
+
+      <div class="tarjeta paso">
+        <span class="num">3</span>
+        <h3>Inclinación del anillo <span class="var">θ</span></h3>
+        <p>Es la diferencia entre la latitud del lugar <span class="var">φ</span> (Sur negativa, Norte positiva) y la latitud donde está el Sol <span class="var">δ</span>.</p>
+        <div class="ecuacion" id="f-theta-gen"></div>
+        <div class="ecuacion" id="f-theta"></div>
+        <p class="conclusion" id="f-lado"></p>
+      </div>
+
+      <div class="tarjeta paso">
+        <span class="num">4</span>
+        <h3>Altura del Sol sobre el horizonte <span class="var">α</span></h3>
+        <p>Si el anillo se inclina <span class="var">θ</span> desde la vertical, el Sol está a <span class="var">90° − θ</span> sobre el horizonte.</p>
+        <div class="ecuacion" id="f-alfa"></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra sol"></span>Así se ve en la Tierra</h3>
+        <canvas id="cv-tierra" class="cv-redondo" width="360" height="260" aria-label="Diagrama de la Tierra y los rayos del Sol"></canvas>
+        <p class="mini">Los rayos del Sol llegan paralelos. Donde caen verticales está la latitud <b>δ</b>. En la ciudad elegida, la línea blanca apunta al <b>cenit</b> (justo arriba de la cabeza); el ángulo naranja <b>θ</b> entre el cenit y el Sol es lo que inclinamos el anillo.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra azul"></span>¿Por qué cambia durante el año?</h3>
+        <p>El eje de la Tierra está inclinado <b>23,45°</b>. Mientras la Tierra da la vuelta al Sol, el lugar donde el Sol cae vertical se mueve entre dos líneas:</p>
+        <ul class="lista">
+          <li><b>21 de junio</b>: el Sol está vertical sobre el <b>Trópico de Cáncer</b> (δ = +23,45°).</li>
+          <li><b>21 de marzo y 23 de septiembre</b> (equinoccios): sobre el <b>ecuador</b> (δ = 0°).</li>
+          <li><b>21 de diciembre</b>: sobre el <b>Trópico de Capricornio</b> (δ = −23,45°).</li>
+        </ul>
+        <p>Por eso, para un mismo lugar, el ángulo del anillo cambia cada día. Cuanto más lejos está el lugar de la latitud del Sol, más inclinado llega el Sol y más se inclina el anillo.</p>
+        <p class="nota">La ecuación de Cooper es una aproximación muy usada en ingeniería solar; su error es de alrededor de 1°, suficiente para un heliodón.</p>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra verde"></span>Regla del lado (Norte o Sur)</h3>
+        <ul class="lista">
+          <li>Si <span class="var">φ − δ</span> es <b>positivo</b>, el Sol está al <b>Sur</b> del cenit → el anillo se inclina hacia el <b>Sur</b>.</li>
+          <li>Si es <b>negativo</b>, el Sol está al <b>Norte</b> → el anillo se inclina hacia el <b>Norte</b>.</li>
+          <li>Si la diferencia es menor a <b>0,5°</b>, el programa deja el anillo <b>vertical (0°)</b>, porque en la práctica no se ajusta con más precisión.</li>
+        </ul>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra rojo"></span>Glosario rápido</h3>
+        <dl class="glosario">
+          <dt>Latitud (φ)</dt><dd>Qué tan al Norte o al Sur del ecuador está un lugar. Cochabamba: 18° S.</dd>
+          <dt>Declinación (δ)</dt><dd>Latitud donde el Sol está justo arriba al mediodía ese día.</dd>
+          <dt>Cenit</dt><dd>El punto del cielo justo encima de nuestra cabeza.</dd>
+          <dt>Solsticio</dt><dd>Los días en que el Sol llega más al Norte (21/06) o más al Sur (21/12).</dd>
+          <dt>Equinoccio</dt><dd>Los días en que el Sol está sobre el ecuador (21/03 y 23/09).</dd>
+          <dt>Hemisferio</dt><dd>Mitad Norte o mitad Sur de la Tierra. Las estaciones están invertidas entre ambas.</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ HELIODON ============================ -->
+<section id="pag-heliodon" class="pagina" aria-labelledby="t-heliodon">
+  <h2 id="t-heliodon" class="titulo-pag">El heliodón</h2>
+  <div class="dos-col">
+    <div class="col">
+      <div class="tarjeta hero">
+        <img src="img/heliodon.png" alt="Heliodón del proyecto: anillo metálico sobre una estructura de tubo, con una mesa al centro" loading="lazy">
+        <div>
+          <h3>¿Qué es un heliodón?</h3>
+          <p>Es una máquina que <b>imita la posición del Sol</b> para cualquier lugar y fecha. Así podemos ver, en pequeño, cómo llega la luz y dónde caen las sombras sin esperar meses a que cambie la estación.</p>
+          <div class="analogia">
+            <div><span>💡</span><b>El foco</b> hace de Sol</div>
+            <div><span>⭕</span><b>El anillo</b> lleva al Sol a su posición</div>
+            <div><span>🏠</span><b>La mesa</b> es el lugar, con una maqueta</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra azul"></span>Nuestro heliodón</h3>
+        <p>El heliodón que se expone fue <b>fabricado en el PDTF</b>, el <b>Programa de Desarrollo de Tecnologías de Fabricación</b> de la Universidad Mayor de San Simón.</p>
+        <p>El proyecto fue <b>diseñado por estudiantes de Ingeniería Electromecánica, Ingeniería Mecánica e Ingeniería en Energías</b> de la UMSS.</p>
+        <figure class="figura">
+          <svg class="partes-img" viewBox="0 0 574 677" role="img" aria-label="Heliodón con sus partes numeradas">
+            <image href="img/heliodon.png" x="0" y="0" width="574" height="677"/>
+            <g font-family="Segoe UI, system-ui, sans-serif" font-weight="800" font-size="30" text-anchor="middle">
+              <g class="marca-p"><circle cx="92" cy="170" r="24"/><text x="92" y="181">1</text></g>
+              <g class="marca-p"><circle cx="300" cy="22" r="24"/><text x="300" y="33">2</text></g>
+              <g class="marca-p"><circle cx="545" cy="345" r="24"/><text x="545" y="356">3</text></g>
+              <g class="marca-p"><circle cx="300" cy="300" r="24"/><text x="300" y="311">4</text></g>
+              <g class="marca-p"><circle cx="545" cy="560" r="24"/><text x="545" y="571">5</text></g>
+            </g>
+          </svg>
+          <figcaption>Modelo del heliodón del proyecto, con sus partes.</figcaption>
+        </figure>
+        <ol class="partes">
+          <li><b>Anillo metálico</b>: sostiene el foco y se inclina hacia el Norte o el Sur.</li>
+          <li><b>Foco y su soporte</b>: el foco representa al Sol; se enciende desde la computadora.</li>
+          <li><b>Transportador graduado</b>: en el eje del anillo, para leer los grados de inclinación.</li>
+          <li><b>Mesa central</b>: aquí va la maqueta (una casa, un edificio, un panel solar…).</li>
+          <li><b>Estructura de tubo</b>: soporta todo y mantiene el anillo firme.</li>
+        </ol>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra sol"></span>Pruébelo: mueva el anillo</h3>
+        <p class="mini">Deslice para inclinar el anillo y vea cómo cambia la posición del Sol y la sombra de la casa.</p>
+        <canvas id="cv-helio-prueba" width="380" height="330" aria-label="Heliodón interactivo"></canvas>
+        <input type="range" id="rango" min="-85" max="85" step="1" value="0" aria-label="Inclinación del anillo">
+        <div class="rango-txt"><span>← Norte</span><b id="rango-val">0° (vertical)</b><span>Sur →</span></div>
+        <canvas id="cv-sol-prueba" class="cv-redondo mt" height="160" aria-label="El Sol sobre una casa"></canvas>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra verde"></span>Entendiendo los grados</h3>
+        <div class="grados">
+          <figure><canvas data-grados="0" height="120" class="cv-redondo" aria-label="Sol a 0 grados"></canvas><figcaption>0° · Sol encima</figcaption></figure>
+          <figure><canvas data-grados="30" height="120" class="cv-redondo" aria-label="Sol a 30 grados"></canvas><figcaption>30° · sombra corta</figcaption></figure>
+          <figure><canvas data-grados="60" height="120" class="cv-redondo" aria-label="Sol a 60 grados"></canvas><figcaption>60° · sombra larga</figcaption></figure>
+          <figure><canvas data-grados="83" height="120" class="cv-redondo" aria-label="Sol a 83 grados"></canvas><figcaption>83° · Sol en el horizonte</figcaption></figure>
+        </div>
+        <ul class="lista">
+          <li><b>0°</b>: el anillo está vertical; el Sol está <b>justo encima</b> (en el cenit). Casi no hay sombra.</li>
+          <li><b>30°</b>: el Sol está algo inclinado; las sombras son cortas.</li>
+          <li><b>60°</b>: el Sol está bajo; las sombras son largas, como en invierno en Madrid.</li>
+          <li><b>Cerca de 90°</b>: el Sol está casi en el horizonte, como en Oslo en diciembre (unos 83°).</li>
+        </ul>
+        <p><b>¿Hacia el Norte o hacia el Sur?</b> El anillo siempre se inclina hacia el lado donde está el Sol al mediodía. En Cochabamba casi todo el año el Sol del mediodía está hacia el <b>Norte</b>, así que el anillo se inclina al Norte. Solo entre noviembre y fines de enero el Sol pasa al lado <b>Sur</b>. En España y Noruega, que están en el hemisferio Norte, el Sol del mediodía siempre está hacia el <b>Sur</b>.</p>
+        <p>Por eso, antes de mover el anillo, el heliodón se orienta con una brújula: un lado mirando al Norte y el otro al Sur.</p>
+        <p id="cenit-cocha" class="destacado-txt"></p>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra rojo"></span>Cómo será la exposición</h3>
+        <ol class="pasos">
+          <li>Elegimos un <b>país</b> y una <b>fecha</b> en el programa (o en esta app).</li>
+          <li>El programa calcula el <b>ángulo del anillo</b> y hacia qué lado (Norte o Sur).</li>
+          <li>Orientamos el heliodón Norte–Sur e <b>inclinamos el anillo</b> esos grados usando el transportador.</li>
+          <li>La computadora <b>enciende el foco</b> a través del Arduino.</li>
+          <li>Miramos la <b>luz y las sombras</b> sobre la maqueta: así se vería ese lugar a mediodía ese día.</li>
+        </ol>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra azul"></span>¿Para qué sirve un heliodón?</h3>
+        <div class="usos">
+          <div><svg viewBox="0 0 140 80" aria-hidden="true"><rect width="140" height="80" rx="10" fill="#cfe9fb"/><rect y="64" width="140" height="16" fill="#7cbf5a"/><circle cx="20" cy="16" r="9" fill="#ffd23f" stroke="#f0a500" stroke-width="2"/><line x1="28" y1="22" x2="62" y2="50" stroke="#f5a300" stroke-width="2" stroke-dasharray="4 3"/><rect x="60" y="34" width="50" height="30" fill="#f4ead7" stroke="#b9a27c"/><polygon points="44,34 116,34 116,28 44,28" fill="#d7262f"/><rect x="64" y="42" width="12" height="12" fill="#9fd3f2" stroke="#7a8ea6"/></svg><b>Arquitectura</b><p>Decidir dónde poner ventanas y aleros para que la casa reciba sol en invierno y sombra en verano.</p></div>
+          <div><svg viewBox="0 0 140 80" aria-hidden="true"><rect width="140" height="80" rx="10" fill="#cfe9fb"/><rect y="64" width="140" height="16" fill="#7cbf5a"/><circle cx="20" cy="16" r="9" fill="#ffd23f" stroke="#f0a500" stroke-width="2"/><polygon points="56,64 132,64 132,72 56,72" fill="#4f8a3b"/><rect x="40" y="18" width="18" height="46" fill="#9fb0c6" stroke="#6b7787"/><rect x="92" y="48" width="24" height="16" fill="#f4ead7" stroke="#b9a27c"/><polygon points="89,48 104,38 119,48" fill="#d7262f"/></svg><b>Urbanismo</b><p>Ver qué sombras hará un edificio nuevo sobre las casas y plazas vecinas.</p></div>
+          <div><svg viewBox="0 0 140 80" aria-hidden="true"><rect width="140" height="80" rx="10" fill="#cfe9fb"/><rect y="64" width="140" height="16" fill="#7cbf5a"/><circle cx="20" cy="16" r="9" fill="#ffd23f" stroke="#f0a500" stroke-width="2"/><line x1="30" y1="22" x2="70" y2="44" stroke="#f5a300" stroke-width="2" stroke-dasharray="4 3"/><polygon points="58,58 112,36 118,46 64,68" fill="#1d4f91" stroke="#0d3b7a"/><line x1="70" y1="63" x2="72" y2="72" stroke="#3a4049" stroke-width="3"/><line x1="108" y1="47" x2="110" y2="66" stroke="#3a4049" stroke-width="3"/></svg><b>Energía solar</b><p>Ubicar paneles solares y termas donde no les caiga sombra en todo el año.</p></div>
+          <div><svg viewBox="0 0 140 80" aria-hidden="true"><rect width="140" height="80" rx="10" fill="#cfe9fb"/><rect y="64" width="140" height="16" fill="#7cbf5a"/><circle cx="20" cy="16" r="9" fill="#ffd23f" stroke="#f0a500" stroke-width="2"/><path d="M50 64 V44 Q80 18 110 44 V64 Z" fill="#e3f4fb" stroke="#7aa6c2" stroke-width="2"/><g fill="#3f8f3a"><circle cx="64" cy="58" r="5"/><circle cx="80" cy="56" r="6"/><circle cx="96" cy="58" r="5"/></g></svg><b>Agricultura</b><p>Diseñar invernaderos y saber cuánta luz recibirán los cultivos.</p></div>
+          <div><svg viewBox="0 0 140 80" aria-hidden="true"><rect width="140" height="80" rx="10" fill="#0f1f3d"/><circle cx="24" cy="40" r="11" fill="#ffd23f"/><g transform="rotate(23.45 92 40)"><circle cx="92" cy="40" r="24" fill="#2f7fd1" stroke="#a9cdf5" stroke-width="2"/><line x1="92" y1="10" x2="92" y2="70" stroke="#cfe0f7" stroke-width="2"/><line x1="68" y1="40" x2="116" y2="40" stroke="#fff" stroke-dasharray="3 3"/></g></svg><b>Educación</b><p>Explicar las estaciones, los solsticios y los equinoccios de forma visual.</p></div>
+        </div>
+      </div>
+
+      <div class="tarjeta bolivia">
+        <h3 class="t-tarjeta"><span class="barra verde"></span>Usos en Bolivia</h3>
+        <figure class="figura">
+          <canvas id="cv-alero" class="cv-redondo" height="230" aria-label="Alero de una casa en Cochabamba en invierno y en verano"></canvas>
+          <figcaption id="alero-txt">Ejemplo en Cochabamba: el alero de una casa.</figcaption>
+        </figure>
+        <ul class="lista">
+          <li><b>Viviendas del altiplano</b> (El Alto, Oruro, Potosí): orientar ventanas y muros para que el sol caliente las casas en las noches frías.</li>
+          <li><b>Invernaderos andinos</b>, como los <i>walipinis</i> semienterrados del altiplano: calcular cómo entra el sol en cada época.</li>
+          <li><b>Paneles solares y termas</b> en Cochabamba y otras ciudades: elegir la inclinación y evitar sombras.</li>
+          <li><b>Plantas solares</b> del país, como las de Uyuni y Oruro: entender cómo cambia el sol a lo largo del año.</li>
+          <li><b>Escuelas y postas de salud rurales</b>: diseñar aulas iluminadas y abrigadas aprovechando el sol.</li>
+          <li><b>Carreras de Arquitectura e Ingeniería</b>: probar maquetas antes de construir.</li>
+        </ul>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra sol"></span>Cómo funciona el sistema</h3>
+        <svg class="diagrama" viewBox="0 0 340 236" role="img" aria-label="Computadora, cable USB, Arduino UNO, relé y foco">
+          <defs><marker id="fl" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 10 5 0 10z" fill="#0d3b7a"/></marker></defs>
+          <g font-family="Segoe UI, system-ui, sans-serif" font-weight="700" text-anchor="middle">
+            <rect x="6" y="10" width="138" height="66" rx="12" fill="#e8eef8" stroke="#0d3b7a" stroke-width="2"/>
+            <text x="75" y="38" fill="#0d3b7a" font-size="15">Computadora</text><text x="75" y="58" fill="#44546d" font-size="11.5" font-weight="400">programa Python</text>
+            <rect x="196" y="10" width="138" height="66" rx="12" fill="#e7f6ee" stroke="#16a34a" stroke-width="2"/>
+            <text x="265" y="38" fill="#11632f" font-size="15">Arduino UNO</text><text x="265" y="58" fill="#44546d" font-size="11.5" font-weight="400">recibe "R1" / "OFF"</text>
+            <rect x="196" y="130" width="138" height="66" rx="12" fill="#fdecec" stroke="#d7262f" stroke-width="2"/>
+            <text x="265" y="158" fill="#9b1c22" font-size="15">Relé</text><text x="265" y="178" fill="#44546d" font-size="11.5" font-weight="400">interruptor 110/220 V</text>
+            <rect x="6" y="130" width="138" height="66" rx="12" fill="#fff4d9" stroke="#f5a300" stroke-width="2"/>
+            <text x="75" y="158" fill="#8a5300" font-size="15">Foco (Sol)</text><text x="75" y="178" fill="#44546d" font-size="11.5" font-weight="400">centro del anillo</text>
+            <line x1="146" y1="43" x2="192" y2="43" stroke="#0d3b7a" stroke-width="3" marker-end="url(#fl)"/>
+            <line x1="265" y1="78" x2="265" y2="126" stroke="#0d3b7a" stroke-width="3" marker-end="url(#fl)"/>
+            <line x1="194" y1="163" x2="148" y2="163" stroke="#0d3b7a" stroke-width="3" marker-end="url(#fl)"/>
+            <text x="170" y="32" fill="#7b8aa1" font-size="11">USB</text>
+            <text x="296" y="106" fill="#7b8aa1" font-size="11">pin 4</text>
+            <text x="170" y="152" fill="#7b8aa1" font-size="11">luz</text>
+          </g>
+          <text x="170" y="222" text-anchor="middle" font-family="Segoe UI, system-ui, sans-serif" font-size="11" fill="#7b8aa1">Sin Arduino: modo simulación (no enciende el foco).</text>
+        </svg>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra azul"></span>El programa en Python</h3>
+        <div class="simple">
+          <b>En palabras simples</b>
+          <p>El programa es como una <b>calculadora con control remoto</b>. Le decimos un país y una fecha, y con las fórmulas de la pestaña Fórmula calcula cuántos grados hay que inclinar el anillo. Después, por el cable USB, le "dice" al Arduino que encienda el foco.</p>
+          <div class="flujo">
+            <span>País + fecha</span><i>→</i><span>Fórmulas</span><i>→</i><span>Ángulo del anillo</span><i>→</i><span>Orden "R1" al Arduino</span>
+          </div>
+          <p>Si el Arduino no está conectado, el programa igual calcula todo (<b>modo simulación</b>), pero no enciende el foco real.</p>
+        </div>
+        <p class="mini">Los detalles para quien quiera saber más:</p>
+        <ul class="lista">
+          <li>Tiene una ventana hecha con <b>Tkinter</b> con tres pestañas: Manejo Libre, Ubicaciones y Apagado Total.</li>
+          <li>Con el país y la fecha calcula <b>n</b>, la <b>declinación δ</b> (ecuación de Cooper) y el <b>ángulo θ</b> del anillo: los mismos pasos de la pestaña Fórmula.</li>
+          <li>Con la librería <b>pyserial</b> envía órdenes de texto por USB (9600 baudios): <code>R1</code> para encender y <code>OFF</code> para apagar.</li>
+          <li>Al abrirse busca el Arduino solo: le manda <code>PING</code> y espera la respuesta <code>PONG</code>.</li>
+        </ul>
+        <pre class="codigo"><code>def declinacion_solar(n):
+    """Ecuacion de Cooper."""
+    ang = (360.0 / 365.0) * (284 + n)
+    return 23.45 * math.sin(math.radians(ang))
+
+def inclinacion_anillo(lat, decl):
+    d = lat - decl
+    if abs(d) &lt; 0.5:
+        return 0.0, ""
+    return abs(d), ("Sur" if d &gt; 0 else "Norte")</code></pre>
+      </div>
+
+      <div class="tarjeta">
+        <h3 class="t-tarjeta"><span class="barra verde"></span>El Arduino y el relé</h3>
+        <div class="simple">
+          <b>En palabras simples</b>
+          <p>El <b>Arduino</b> es una pequeña computadora que vive en el heliodón. Espera órdenes de la PC: cuando le llega "encender", activa el <b>relé</b>.</p>
+          <p>El <b>relé</b> es un <b>interruptor que se mueve solo</b>: es como un dedo que aprieta el interruptor de la luz. Así, una señal pequeña y segura de 5 V puede prender el foco de 220 V que hace de Sol.</p>
+          <div class="flujo">
+            <span>PC</span><i>→</i><span>Arduino</span><i>→</i><span>Relé</span><i>→</i><span>Foco encendido</span>
+          </div>
+        </div>
+        <p class="mini">Los detalles para quien quiera saber más:</p>
+        <ul class="lista">
+          <li>Una placa <b>Arduino UNO</b> recibe las órdenes de la computadora por el cable USB.</li>
+          <li>Cuando llega <code>R1</code>, pone en <b>LOW</b> el <b>pin 4</b>. El módulo de relés es <b>activo en bajo</b>: con LOW el relé se cierra y el foco se enciende.</li>
+          <li>Con <code>OFF</code> pone el pin en HIGH: el relé se abre y el foco se apaga.</li>
+          <li>El relé permite que una señal pequeña de 5 V controle el foco de 110/220 V sin peligro para el Arduino.</li>
+        </ul>
+        <pre class="codigo"><code>else if (cmd == "R1") {
+  apagarTodos(); activarCanal(1);   // pin 4 en LOW -&gt; foco encendido
+  Serial.println(F("OK R1"));
+}</code></pre>
+        <p class="nota">⚠️ Seguridad: el foco trabaja con 110/220 V. Las conexiones se hacen con el sistema desenergizado y por personal calificado.</p>
+      </div>
+
+      <div class="tarjeta creditos">
+        <img src="img/logo_umss.png" alt="Escudo de la Universidad Mayor de San Simón" loading="lazy">
+        <div>
+          <b>Universidad Mayor de San Simón</b>
+          <p>Heliodón fabricado en el PDTF (Programa de Desarrollo de Tecnologías de Fabricación).</p>
+          <p>Diseñado por estudiantes de Ingeniería Electromecánica, Ingeniería Mecánica e Ingeniería en Energías.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<nav class="tabs" aria-label="Secciones">
+  <button data-ir="simular" class="activo">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/></svg>
+    <span>Ubicaciones</span>
+  </button>
+  <button data-ir="formula">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19 10 5l6 14M6.5 13h7M17 9h4M19 7v4"/></svg>
+    <span>Fórmula</span>
+  </button>
+  <button data-ir="heliodon">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    <span>Heliodón</span>
+  </button>
+</nav>
+
+<!-- Ventana del codigo QR -->
+<div class="modal" id="modal-qr" hidden>
+  <div class="modal-caja" role="dialog" aria-modal="true" aria-labelledby="t-qr">
+    <button class="cerrar" id="qr-cerrar" aria-label="Cerrar">✕</button>
+    <h3 id="t-qr">Escanee para abrir el simulador</h3>
+    <div id="qr" class="qr"></div>
+    <p class="url" id="qr-url"></p>
+    <p class="mini" id="qr-aviso"></p>
+    <div class="modal-botones">
+      <button id="qr-copiar">Copiar enlace</button>
+      <button id="qr-grande" class="primario">Pantalla completa</button>
+    </div>
+    <p class="mini">En el celular: abra el enlace y elija <b>“Agregar a la pantalla de inicio”</b> (o <b>“Instalar app”</b>) para tenerlo como aplicación, también sin internet.</p>
+  </div>
+</div>
+
+<script src="lib/katex/katex.min.js"></script>
+<script src="lib/qrcode.js"></script>
+<script src="js/calculos.js"></script>
+<script src="js/dibujos.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

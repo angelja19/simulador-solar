@@ -1,0 +1,75 @@
+==================================================================
+  SIMULADOR SOLAR - VERSION PARA CELULAR (app web / PWA)
+  Universidad Mayor de San Simon
+==================================================================
+
+QUE ES
+------
+Una pagina web que funciona como aplicacion en el celular. Tiene 3 secciones:
+  - Ubicaciones : pais, fecha (dia y mes), imagen del pais, latitud,
+                  inclinacion del anillo (heliodon dibujado), estacion
+                  y la animacion del Sol sobre una casa.
+  - Formula     : los 4 pasos del calculo con los numeros de la fecha elegida.
+  - Heliodon    : que es, para que sirve, usos en Bolivia, el PDTF,
+                  el programa en Python y el Arduino.
+Usa exactamente los mismos calculos que el programa de PC
+(se comprobaron los 365 dias para los 5 paises: dan lo mismo).
+No enciende el foco: eso solo lo hace el programa de PC con el Arduino.
+
+
+PROBARLA EN SU PC (sin publicar)
+--------------------------------
+Doble clic en index.html. Se abre en el navegador y funciona completa.
+(El QR solo sirve cuando la pagina ya esta publicada en internet.)
+
+
+PUBLICARLA EN GITHUB PAGES (para que funcione el QR)
+-----------------------------------------------------
+OPCION A - Con Claude Code (en su PC, con su cuenta de GitHub conectada):
+  Abra Claude Code dentro de esta carpeta y escribale:
+
+    "Crea un repositorio publico en mi GitHub llamado simulador-solar con
+     todos los archivos de esta carpeta, subelos a la rama main y activa
+     GitHub Pages desde la rama main (carpeta raiz). Al final dame el enlace."
+
+  Claude Code usara comandos como:
+    gh repo create simulador-solar --public --source=. --push
+    gh api repos/SU_USUARIO/simulador-solar/pages -X POST -f "source[branch]=main" -f "source[path]=/"
+
+OPCION B - A mano, desde la pagina de GitHub:
+  1. github.com -> "New repository" -> nombre: simulador-solar -> Public -> Create.
+  2. "uploading an existing file" -> arrastre TODO el contenido de esta carpeta
+     (index.html, css, js, lib, img, icons, manifest.webmanifest, sw.js...)
+     -> "Commit changes".
+  3. Settings -> Pages -> Branch: main, carpeta / (root) -> Save.
+  4. Espere 1 o 2 minutos. El enlace sera:
+        https://SU_USUARIO.github.io/simulador-solar/
+
+
+EL CODIGO QR
+------------
+1. Abra el enlace publicado en la PC (o en el celular).
+2. Pulse el boton "QR" (arriba a la derecha).
+3. Pulse "Pantalla completa" y proyectelo en la exposicion.
+   El QR siempre apunta a la pagina publicada en la que esta.
+
+
+INSTALARLA COMO APP EN EL CELULAR
+---------------------------------
+Android (Chrome): abrir el enlace -> boton "Instalar" o menu -> "Instalar app".
+iPhone (Safari): abrir el enlace -> Compartir -> "Agregar a pantalla de inicio".
+Despues de abrirla una vez, funciona tambien sin internet.
+
+
+SI CAMBIA ALGO DESPUES
+----------------------
+Vuelva a subir los archivos cambiados al mismo repositorio (el enlace y el
+QR no cambian). En sw.js cambie VERSION (por ejemplo a "simulador-solar-v2")
+para que los celulares descarguen la version nueva.
+
+
+CREDITOS DE LIBRERIAS INCLUIDAS (licencia MIT)
+----------------------------------------------
+  lib/katex     : KaTeX 0.16.11 (para mostrar las formulas)
+  lib/qrcode.js : QR Code Generator 1.4.4 - Kazuhiko Arase
+==================================================================
